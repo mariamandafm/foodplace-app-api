@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from decimal import Decimal
+from core import models
 
 
 class ModelTests(TestCase):
@@ -40,3 +42,14 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_item(self):
+        """Test creating a item is successful."""
+        food_item = models.FoodItem.objects.create(
+            name='Food name',
+            description='Food description',
+            price=Decimal('14.50'),
+            available=True,
+        )
+
+        self.assertEqual(str(food_item), food_item.name)

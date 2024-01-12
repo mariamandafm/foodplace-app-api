@@ -35,3 +35,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class FoodItem(models.Model):
+    """FoodItem object."""
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    available = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
