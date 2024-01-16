@@ -43,6 +43,7 @@ class FoodItem(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     available = models.BooleanField(default=False)
+    image = models.ImageField(null=True, upload_to='images/')
 
     def __str__(self):
         return self.name

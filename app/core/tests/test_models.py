@@ -50,6 +50,7 @@ class ModelTests(TestCase):
             description='Food description',
             price=Decimal('14.50'),
             available=True,
+            image='/food.jpg',
         )
 
         self.assertEqual(str(food_item), food_item.name)

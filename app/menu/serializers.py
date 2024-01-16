@@ -7,11 +7,11 @@ class FoodItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FoodItem
-        fields = ['id', 'name', 'price', 'available']
+        fields = ['id', 'name', 'description', 'price', 'available', 'image']
         read_only_fields = ['id']
 
 
 class FoodItemDetailSerializer(FoodItemSerializer):
 
     class Meta(FoodItemSerializer.Meta):
-        fields = FoodItemSerializer.Meta.fields + ['description']
+        fields = FoodItemSerializer.Meta.fields
