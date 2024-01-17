@@ -6,6 +6,17 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+import uuid
+import os
+
+
+def food_item_image_file_path(instance, filename):
+    """Generate file path for new food item image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads', 'food_item', filename)
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -43,7 +54,7 @@ class FoodItem(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     available = models.BooleanField(default=False)
-    image = models.ImageField(null=True, upload_to='images/')
+    image = models.ImageField(null=True, upload_to=food_item_image_file_path)
 
     def __str__(self):
         return self.name
