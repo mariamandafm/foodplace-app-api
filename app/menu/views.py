@@ -1,7 +1,13 @@
 from rest_framework import viewsets, permissions, authentication
 
-from core.models import FoodItem
-from menu import serializers
+from core.models import (
+    FoodItem,
+    Order,
+    )
+from menu import (
+    serializers,
+
+)
 
 
 class AuthenticatedForWriteMethods(permissions.BasePermission):
@@ -28,3 +34,14 @@ class FoodItemViewSet(viewsets.ModelViewSet):
             return serializers.FoodItemSerializer
 
         return self.serializer_class
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.OrderSerializer
+    queryset = Order.objects.all()
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter queryset to authenticated user."""
+        return self.queryset.filter(user=self.request.user).order_by('-id')

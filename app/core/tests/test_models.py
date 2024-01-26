@@ -54,3 +54,39 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(food_item), food_item.name)
+
+    def test_create_order(self):
+        """Test creating a order is successful."""
+        email = 'test@example.com'
+        password = 'testpass123'
+        user = get_user_model().objects.create_user(
+            email=email,
+            name='Test user',
+            password=password,
+        )
+
+        food_item_1 = models.FoodItem.objects.create(
+            name='Food name',
+            description='Food description',
+            price=Decimal('30'),
+            available=True,
+        )
+
+        food_item_2 = models.FoodItem.objects.create(
+            name='Food name 2',
+            description='Food description 2',
+            price=Decimal('14.50'),
+            available=True,
+        )
+
+        order = models.Order.objects.create(
+            user=user,
+        )
+
+        order.food_items.add(food_item_1)
+        order.food_items.add(food_item_2)
+
+        self.assertEqual(order.user, user)
+        self.assertEqual(order.total_items, 2)
+        self.assertEqual(order.total_price, Decimal('44.50'))
+        self.assertEqual(str(order), f"{order.user} - {order.date}")

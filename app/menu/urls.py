@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('food-item', views.FoodItemViewSet)
+router.register('orders', views.OrderViewSet)
 
 app_name = 'menu'
 

@@ -9,6 +9,27 @@ from django.contrib.auth.models import (
 import uuid
 import os
 
+ORDER_STATUS = (
+    ('PENDING', 'Pending'),
+    ('CONFIRMED', 'Confirmed'),
+    ('PREPARING', 'Preparing'),
+    ('READY', 'Ready'),
+    ('DELIVERED', 'Delivered'),
+    ('CANCELLED', 'Cancelled'),
+)
+
+PAYMENT_METHOD = (
+    ('CASH', 'Cash'),
+    ('CARD', 'Card'),
+)
+
+FOOD_TYPE = (
+    ('STARTER', 'Starter'),
+    ('MAIN_COURSE', 'Main Course'),
+    ('DESSERT', 'Dessert'),
+    ('DRINK', 'Drink'),
+)
+
 
 def food_item_image_file_path(instance, filename):
     """Generate file path for new food item image."""
@@ -55,6 +76,37 @@ class FoodItem(models.Model):
     price = models.DecimalField(max_digits=5, decimal_places=2)
     available = models.BooleanField(default=False)
     image = models.ImageField(null=True, upload_to=food_item_image_file_path)
+    type = models.CharField(max_length=20, choices=FOOD_TYPE, default='MAIN_COURSE')
 
     def __str__(self):
         return self.name
+
+
+class Order(models.Model):
+    """Order object."""
+    user = models.ForeignKey(
+        User,
+        related_name='orders',
+        on_delete=models.CASCADE,
+    )
+    food_items = models.ManyToManyField(FoodItem, default=None, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='PENDING')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='CASH')
+
+    @property
+    def total_price(self):
+        """Calculate and return total price of order."""
+        total = 0
+        for food_item in self.food_items.all():
+            total += food_item.price
+
+        return total
+
+    @property
+    def total_items(self):
+        """Calculate and return total number of items in order."""
+        return self.food_items.count()
+
+    def __str__(self):
+        return f'{self.user} - {self.date}'
