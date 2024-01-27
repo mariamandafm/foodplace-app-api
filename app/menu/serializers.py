@@ -29,18 +29,39 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def create(self, validated_data):
-        food_items = validated_data.pop('food_items', [])
+        # query if the an order with status 'NOT_PLACED' exists for the user
         auth_user = self.context['request'].user
-        order = Order.objects.create(user=auth_user, **validated_data)
-        for item in food_items:
-            try:
-                item_obj = FoodItem.objects.get(
-                    **item
-                )
-                order.food_items.add(item_obj)
-            except FoodItem.DoesNotExist:
-                raise serializers.ValidationError(
-                    'Food item does not exist.'
-                )
+        order = Order.objects.filter(
+            user=auth_user,
+            status='NOT_PLACED'
+        ).first()
+        # if order exists, add food items to the order
+        if order:
+            food_items = validated_data.pop('food_items', [])
+            for item in food_items:
+                try:
+                    item_obj = FoodItem.objects.get(
+                        **item
+                    )
+                    order.food_items.add(item_obj)
+                except FoodItem.DoesNotExist:
+                    raise serializers.ValidationError(
+                        'Food item does not exist.'
+                    )
+        else:
+            # else create a new order
+            food_items = validated_data.pop('food_items', [])
+            auth_user = self.context['request'].user
+            order = Order.objects.create(user=auth_user, **validated_data)
+            for item in food_items:
+                try:
+                    item_obj = FoodItem.objects.get(
+                        **item
+                    )
+                    order.food_items.add(item_obj)
+                except FoodItem.DoesNotExist:
+                    raise serializers.ValidationError(
+                        'Food item does not exist.'
+                    )
 
         return order

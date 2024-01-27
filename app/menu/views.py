@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, authentication
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from core.models import (
     FoodItem,
@@ -44,4 +46,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Filter queryset to authenticated user."""
-        return self.queryset.filter(user=self.request.user).order_by('-id')
+        return self.queryset.filter(user=self.request.user, status="NOT_PLACED").order_by('-id')
+
+    @action(detail=False, methods=['GET'])
+    def history(self, request):
+        """Return orders history."""
+        orders = self.queryset.filter(user=request.user).order_by('-id')
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)

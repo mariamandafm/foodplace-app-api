@@ -16,6 +16,7 @@ from menu.serializers import (
 )
 
 ORDERS_URL = reverse('menu:order-list')
+ORDERS_HISTORY_URL = reverse('menu:order-history')
 
 
 def detail_url(order_id):
@@ -48,16 +49,15 @@ class PrivateOrdersApiTest(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_retrieve_orders(self):
-        """Test retrieving a list of orders"""
+        """Test retrieving order not placed (in cart)"""
         models.Order.objects.create(user=self.user)
-        models.Order.objects.create(user=self.user)
+        models.Order.objects.create(user=self.user, status='READY')
 
         res = self.client.get(ORDERS_URL)
 
-        orders = models.Order.objects.all().order_by('-id')
-        serializer = OrderSerializer(orders, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]['status'], 'NOT_PLACED')
 
     def test_orders_limited_to_user(self):
         """Test list if orders is limited to authenticated user."""
@@ -108,6 +108,7 @@ class PrivateOrdersApiTest(TestCase):
         orders = models.Order.objects.filter(user=self.user)
         self.assertEqual(orders.count(), 1)
         order = orders[0]
+        self.assertEqual(order.status, 'NOT_PLACED')
         self.assertEqual(order.food_items.count(), 2)
         for item in payload['food_items']:
             exists = order.food_items.filter(
@@ -123,3 +124,15 @@ class PrivateOrdersApiTest(TestCase):
         res = self.client.post(ORDERS_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_order_history(self):
+        """Test retrieving order history."""
+        models.Order.objects.create(user=self.user, status='READY')
+        models.Order.objects.create(user=self.user)
+
+        res = self.client.get(ORDERS_HISTORY_URL)
+
+        orders = models.Order.objects.all().order_by('-id')
+        serializer = OrderSerializer(orders, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)

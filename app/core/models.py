@@ -16,6 +16,7 @@ ORDER_STATUS = (
     ('READY', 'Ready'),
     ('DELIVERED', 'Delivered'),
     ('CANCELLED', 'Cancelled'),
+    ('NOT_PLACED', 'Not Placed'),
 )
 
 PAYMENT_METHOD = (
@@ -91,7 +92,7 @@ class Order(models.Model):
     )
     food_items = models.ManyToManyField(FoodItem, default=None, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='PENDING')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='NOT_PLACED')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='CASH')
 
     @property
