@@ -73,20 +73,30 @@ class ModelTests(TestCase):
         )
 
         food_item_2 = models.FoodItem.objects.create(
-            name='Food name 2',
-            description='Food description 2',
+            name='Food name',
+            description='Food description',
             price=Decimal('14.50'),
             available=True,
+        )
+
+        order_item = models.OrderFoodItem.objects.create(
+            food_item=food_item_1,
+            quantity=2,
+        )
+
+        order_item_2 = models.OrderFoodItem.objects.create(
+            food_item=food_item_2,
+            quantity=1,
         )
 
         order = models.Order.objects.create(
             user=user,
         )
 
-        order.food_items.add(food_item_1)
-        order.food_items.add(food_item_2)
+        order.order_items.add(order_item)
+        order.order_items.add(order_item_2)
 
         self.assertEqual(order.user, user)
-        self.assertEqual(order.total_items, 2)
-        self.assertEqual(order.total_price, Decimal('44.50'))
+        self.assertEqual(order.total_items, 3)
+        self.assertEqual(order.total_price, Decimal('74.50'))
         self.assertEqual(str(order), f"{order.user} - {order.date}")

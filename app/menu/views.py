@@ -39,10 +39,17 @@ class FoodItemViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.OrderSerializer
+    serializer_class = serializers.OrderDetailSerializer
     queryset = Order.objects.all()
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class when POST request is made."""
+        if self.action == 'create':
+            return serializers.OrderSerializer
+
+        return self.serializer_class
 
     def get_queryset(self):
         """Filter queryset to authenticated user."""

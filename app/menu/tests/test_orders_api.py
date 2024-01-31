@@ -94,12 +94,13 @@ class PrivateOrdersApiTest(TestCase):
         self.assertFalse(orders.exists())
 
     def test_create_order_with_existing_food_item(self):
+        """Test creating order with existing food items."""
         food_item = models.FoodItem.objects.create(name='Soup', price=Decimal('10.00'))
         food_item2 = models.FoodItem.objects.create(name='Salad', price=Decimal('14.00'))
 
         payload = {
-            "food_items": [{"name": food_item.name, "price": food_item.price},
-                           {"name": food_item2.name, "price": food_item2.price}],
+            "order_items": [{"food_item": food_item.id, "quantity": 1},
+                            {"food_item": food_item2.id, "quantity": 1}],
             }
 
         res = self.client.post(ORDERS_URL, payload, format='json')
@@ -109,16 +110,17 @@ class PrivateOrdersApiTest(TestCase):
         self.assertEqual(orders.count(), 1)
         order = orders[0]
         self.assertEqual(order.status, 'NOT_PLACED')
-        self.assertEqual(order.food_items.count(), 2)
-        for item in payload['food_items']:
-            exists = order.food_items.filter(
-                name=item['name'],
+        self.assertEqual(order.order_items.count(), 2)
+        for item in payload['order_items']:
+            exists = order.order_items.filter(
+                food_item__id=item['food_item'],
             ).exists()
             self.assertTrue(exists)
 
     def test_can_only_create_order_with_existing_food_item(self):
+        """Test that order can only be created with existing food items."""
         payload = {
-            "food_items": [{"name": "Food name", "price": "9.99"}]
+            "order_items": [{"food_item": 99, "quantity": 1}]
             }
 
         res = self.client.post(ORDERS_URL, payload, format='json')
@@ -136,3 +138,33 @@ class PrivateOrdersApiTest(TestCase):
         serializer = OrderSerializer(orders, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_get_order_detail(self):
+        """Test if orders food items details are retrieved."""
+        order = models.Order.objects.create(user=self.user)
+
+        food_item = models.FoodItem.objects.create(
+            name='Food name',
+            description='Food description',
+            price=Decimal('30.00'),
+            available=True,
+        )
+
+        order_item = models.OrderFoodItem.objects.create(
+            food_item=food_item,
+            quantity=1,
+        )
+
+        order.order_items.add(order_item)
+
+        url = detail_url(order.id)
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res_order_detail = res.data["order_items"][0]
+
+        self.assertEqual(res_order_detail['food_item']['id'], food_item.id)
+        self.assertEqual(res_order_detail['food_item']['name'], food_item.name)
+        self.assertEqual(res_order_detail['food_item']['description'], food_item.description)
+        self.assertEqual(res_order_detail['food_item']['price'], str(food_item.price))
+        self.assertEqual(res_order_detail['food_item']['available'], food_item.available)

@@ -42,3 +42,5 @@ class UserAdmin(BaseUserAdmin):
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.FoodItem)
 admin.site.register(models.Order)
+admin.site.register(models.OrderFoodItem)
+admin.site.register(models.Address)

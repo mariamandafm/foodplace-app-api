@@ -3,6 +3,7 @@ from rest_framework import serializers
 from core.models import (
     FoodItem,
     Order,
+    OrderFoodItem
     )
 
 
@@ -20,12 +21,20 @@ class FoodItemDetailSerializer(FoodItemSerializer):
         fields = FoodItemSerializer.Meta.fields
 
 
+class OrderFoodItemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OrderFoodItem
+        fields = ['id', 'food_item', 'quantity']
+        read_only_fields = ['id']
+
+
 class OrderSerializer(serializers.ModelSerializer):
-    food_items = FoodItemSerializer(many=True, required=False)
+    order_items = OrderFoodItemSerializer(many=True, required=False)
 
     class Meta:
         model = Order
-        fields = ['id', 'food_items', 'status', 'payment_method', 'total_price', 'total_items']
+        fields = ['id', 'order_items', 'status', 'payment_method', 'total_price', 'total_items']
         read_only_fields = ['id']
 
     def create(self, validated_data):
@@ -37,31 +46,54 @@ class OrderSerializer(serializers.ModelSerializer):
         ).first()
         # if order exists, add food items to the order
         if order:
-            food_items = validated_data.pop('food_items', [])
-            for item in food_items:
+            order_items = validated_data.pop('order_items', [])
+            for item in order_items:
+                quantity = item.pop('quantity', 1)
                 try:
-                    item_obj = FoodItem.objects.get(
-                        **item
+                    food_obj = FoodItem.objects.get(id=item['food_item'].id)
+                    item_obj = OrderFoodItem.objects.create(
+                        food_item=food_obj,
+                        quantity=quantity
                     )
-                    order.food_items.add(item_obj)
+                    order.order_items.add(item_obj)
                 except FoodItem.DoesNotExist:
                     raise serializers.ValidationError(
                         'Food item does not exist.'
                     )
         else:
             # else create a new order
-            food_items = validated_data.pop('food_items', [])
+            order_items = validated_data.pop('order_items', [])
             auth_user = self.context['request'].user
-            order = Order.objects.create(user=auth_user, **validated_data)
-            for item in food_items:
+            order = Order.objects.create(user=auth_user)
+
+            for item in order_items:
+                quantity = item.pop('quantity', 1)
                 try:
-                    item_obj = FoodItem.objects.get(
-                        **item
+                    food_obj = FoodItem.objects.get(id=item['food_item'].id)
+                    item_obj = OrderFoodItem.objects.create(
+                        food_item=food_obj,
+                        quantity=quantity
                     )
-                    order.food_items.add(item_obj)
+                    order.order_items.add(item_obj)
                 except FoodItem.DoesNotExist:
                     raise serializers.ValidationError(
                         'Food item does not exist.'
                     )
 
         return order
+
+
+class OrderFoodItemDetailSerializer(OrderFoodItemSerializer):
+    food_item = FoodItemSerializer()
+
+    class Meta(OrderFoodItemSerializer.Meta):
+        fields = OrderFoodItemSerializer.Meta.fields
+        read_only_fields = ['id']
+
+
+class OrderDetailSerializer(OrderSerializer):
+    order_items = OrderFoodItemDetailSerializer(many=True, required=False)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields
+        read_only_fields = ['id']

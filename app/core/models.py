@@ -83,6 +83,37 @@ class FoodItem(models.Model):
         return self.name
 
 
+class Address(models.Model):
+    """Address object."""
+    user = models.ForeignKey(
+        User,
+        related_name='addresses',
+        on_delete=models.CASCADE,
+    )
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    CEP = models.PositiveIntegerField()
+    street = models.CharField(max_length=255)
+    number = models.PositiveIntegerField()
+    complement = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.street}, {self.number}"
+
+
+class OrderFoodItem(models.Model):
+    food_item = models.ForeignKey(
+        FoodItem,
+        related_name='order_items',
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.food_item} - {self.quantity}"
+
+
 class Order(models.Model):
     """Order object."""
     user = models.ForeignKey(
@@ -90,24 +121,29 @@ class Order(models.Model):
         related_name='orders',
         on_delete=models.CASCADE,
     )
-    food_items = models.ManyToManyField(FoodItem, default=None, blank=True)
+    order_items = models.ManyToManyField(OrderFoodItem, default=None, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='NOT_PLACED')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='CASH')
+    delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
 
     @property
     def total_price(self):
         """Calculate and return total price of order."""
         total = 0
-        for food_item in self.food_items.all():
-            total += food_item.price
+        for order_item in self.order_items.all():
+            total += order_item.food_item.price * order_item.quantity
 
         return total
 
     @property
     def total_items(self):
         """Calculate and return total number of items in order."""
-        return self.food_items.count()
+        total = 0
+        for order_item in self.order_items.all():
+            total += order_item.quantity
+
+        return total
 
     def __str__(self):
         return f'{self.user} - {self.date}'
