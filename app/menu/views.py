@@ -1,10 +1,11 @@
-from rest_framework import viewsets, permissions, authentication
+from rest_framework import viewsets, permissions, authentication, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.models import (
     FoodItem,
     Order,
+    OrderFoodItem,
     )
 from menu import (
     serializers,
@@ -61,3 +62,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         orders = self.queryset.filter(user=request.user).order_by('-id')
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
+
+
+class OrderFoodItemViewSet(mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    serializer_class = serializers.OrderFoodItemSerializer
+    queryset = OrderFoodItem.objects.all()
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]

@@ -23,6 +23,10 @@ def detail_url(order_id):
     return reverse('menu:order-detail', args=[order_id])
 
 
+def order_item_url(order_item_id):
+    return reverse('menu:orderfooditem-detail', args=[order_item_id])
+
+
 def create_user(email='user@example.com', password='pass123'):
     return get_user_model().objects.create_user(email=email, password=password)
 
@@ -168,3 +172,30 @@ class PrivateOrdersApiTest(TestCase):
         self.assertEqual(res_order_detail['food_item']['description'], food_item.description)
         self.assertEqual(res_order_detail['food_item']['price'], str(food_item.price))
         self.assertEqual(res_order_detail['food_item']['available'], food_item.available)
+
+    def test_update_order_item(self):
+        """Test updating an order item."""
+        order_item = models.OrderFoodItem.objects.create(
+            food_item=models.FoodItem.objects.create(name='Food name', price=Decimal('30.00')),
+            quantity=1,
+        )
+        payload = {'quantity': 2}
+
+        url = order_item_url(order_item.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        order_item.refresh_from_db()
+        self.assertEqual(order_item.quantity, payload['quantity'])
+
+    def test_delete_order_item(self):
+        '''Test deleting a order item'''
+        order_item = models.OrderFoodItem.objects.create(
+            food_item=models.FoodItem.objects.create(name='Food name', price=Decimal('30.00')),
+            quantity=1,
+        )
+        url = order_item_url(order_item.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(models.OrderFoodItem.objects.filter(id=order_item.id).exists())
