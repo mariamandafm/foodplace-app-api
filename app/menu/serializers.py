@@ -3,7 +3,7 @@ from rest_framework import serializers
 from core.models import (
     FoodItem,
     Order,
-    OrderFoodItem
+    OrderFoodItem,
     )
 
 

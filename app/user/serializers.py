@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from django.utils.translation import gettext as _
+from core.models import (
+    Address,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -45,3 +48,16 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class AddressSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Address
+        fields = ['id', 'city', 'state', 'CEP', 'street', 'number', 'complement']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        auth_user = self.context['request'].user
+        address = Address.objects.create(user=auth_user, **validated_data)
+        return address
