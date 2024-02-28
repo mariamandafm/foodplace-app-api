@@ -5,7 +5,7 @@
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 # FoodPlace API
 
-API for a restaurant web site. This API integrates with restaurant websites, offering management capabilities for menus, carts, and orders. 
+API for a restaurant website. This API integrates with restaurant websites, offering management capabilities for menus, carts, and orders. 
 
 ## Build With
 * Django REST Framework
@@ -14,7 +14,7 @@ API for a restaurant web site. This API integrates with restaurant websites, off
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-The front-end interface in JavaScript for this API can be find in: [front-end](https://github.com/mariamandafm/foodplace-app-front.git)
+The front-end interface in JavaScript for this API can be found in: [front-end](https://github.com/mariamandafm/foodplace-app-front.git).
 ### Prerequisites
 
 The things you need before installing the software.
@@ -33,6 +33,12 @@ Build the images and start the Docker containers:
 ```
 $ docker compose build
 $ docker compose up
+```
+
+### Testing
+Running the unit tests:
+```
+$ sudo docker-compose run --rm app sh -c "python manage.py test"
 ```
 
 ## Documentation
